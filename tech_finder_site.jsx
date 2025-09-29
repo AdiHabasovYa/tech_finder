@@ -65,26 +65,44 @@ const cloudVendors = [
 ];
 
 function Home() {
+  const menuItems = [
+    { label: "Security", to: "/security" },
+    { label: "Cloud", to: "/cloud" },
+    { label: "DB", to: "/db" },
+    { label: "Support", to: "/support" },
+    { label: "Work OS", to: "/workos" },
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-green-100 to-blue-300 flex flex-col items-center justify-center">
-      <img src="/logo.png" alt="Logo" className="w-20 h-20 mb-4" />
-      <h1 className="text-4xl font-bold text-blue-900 mb-4">Tech-Finder</h1>
-      <p className="text-lg text-indigo-900 mb-6 max-w-xl text-center">
-        Match your organization’s technology challenges with recommended
-        suppliers across cloud, security, databases, and operations. Start by
-        choosing the area that interests you.
-      </p>
-      <input
-        type="text"
-        placeholder="Choose your Software"
-        className="text-center py-2 px-4 rounded-md shadow mb-6 w-96"
-      />
-      <div className="flex gap-8 text-xl text-teal-700">
-        <Link to="/cloud">Cloud</Link>
-        <Link to="/security">Security</Link>
-        <Link to="/db">DB</Link>
-        <Link to="/support">Support</Link>
-        <Link to="/workos">Work OS</Link>
+    <div className="min-h-screen bg-gradient-to-r from-[#b0f1cf] via-[#b8d7f7] to-[#a6c1ff] flex flex-col items-center justify-center py-12">
+      <div className="flex flex-col items-center gap-6">
+        <img
+          src="/logo.png"
+          alt="Tech-Finder logo"
+          className="w-24 h-24 drop-shadow-md"
+        />
+        <h1 className="text-5xl font-semibold tracking-[0.35em] text-[#1c3c87] uppercase">
+          Tech- Finder
+        </h1>
+        <div className="w-full flex justify-center">
+          <input
+            type="text"
+            placeholder="Choose your Software"
+            className="w-[28rem] max-w-full rounded-[2.5rem] bg-white/90 py-4 text-center text-2xl font-medium text-[#3c69c9] shadow-[0_12px_35px_rgba(60,105,201,0.25)] outline-none placeholder:text-[#3c69c9]"
+            readOnly
+          />
+        </div>
+        <nav className="flex flex-wrap justify-center gap-10 text-xl font-medium tracking-[0.2em] text-[#1c8a8c] uppercase">
+          {menuItems.map((item) => (
+            <Link
+              key={item.label}
+              to={item.to}
+              className="border-b-2 border-transparent pb-1 transition hover:border-[#1c8a8c] hover:text-[#106e70]"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );
