@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import {
-  initializeDatabase,
   fetchCollections,
   findCloudMatches,
   saveCloudBrief,
@@ -18,25 +17,25 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-app.get("/api/collections", async (req, res, next) => {
+app.get("/api/collections", (req, res, next) => {
   try {
-    const collections = await fetchCollections();
+    const collections = fetchCollections();
     res.json({ collections });
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/products", async (req, res, next) => {
+app.get("/api/products", (req, res, next) => {
   try {
-    const products = await listProducts();
+    const products = listProducts();
     res.json({ products });
   } catch (error) {
     next(error);
   }
 });
 
-app.post("/api/cloud-matches", async (req, res, next) => {
+app.post("/api/cloud-matches", (req, res, next) => {
   try {
     const { need, workloadSize, budget, weakPoints } = req.body || {};
 
@@ -46,32 +45,32 @@ app.post("/api/cloud-matches", async (req, res, next) => {
       });
     }
 
-    const matches = await findCloudMatches({ need, workloadSize, budget, weakPoints });
+    const matches = findCloudMatches({ need, workloadSize, budget, weakPoints });
     res.json({ matches });
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/cloud-briefs", async (req, res, next) => {
+app.get("/api/cloud-briefs", (req, res, next) => {
   try {
-    const briefs = await listCloudBriefs();
+    const briefs = listCloudBriefs();
     res.json({ briefs });
   } catch (error) {
     next(error);
   }
 });
 
-app.get("/api/users", async (req, res, next) => {
+app.get("/api/users", (req, res, next) => {
   try {
-    const users = await listRegisteredUsers();
+    const users = listRegisteredUsers();
     res.json({ users });
   } catch (error) {
     next(error);
   }
 });
 
-app.post("/api/cloud-briefs", async (req, res, next) => {
+app.post("/api/cloud-briefs", (req, res, next) => {
   try {
     const {
       need,
@@ -91,7 +90,7 @@ app.post("/api/cloud-briefs", async (req, res, next) => {
       });
     }
 
-    const brief = await saveCloudBrief({
+    const brief = saveCloudBrief({
       need,
       workloadSize,
       budget,
@@ -117,14 +116,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 4000;
-
-initializeDatabase()
-  .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Tech Finder API listening on port ${PORT}`);
-    });
-  })
-  .catch((error) => {
-    console.error("Failed to initialize the database", error);
-    process.exit(1);
-  });
+app.listen(PORT, () => {
+  console.log(`Tech Finder API listening on port ${PORT}`);
+});
