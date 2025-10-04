@@ -1,6 +1,7 @@
-export const cloudVendorRecords = [
+export const vendorSeedRecords = [
   {
     id: "aws",
+    category: "cloud",
     name: "Amazon Web Services",
     focusAreas: [
       "Virtual Machine",
@@ -22,6 +23,7 @@ export const cloudVendorRecords = [
   },
   {
     id: "azure",
+    category: "cloud",
     name: "Microsoft Azure",
     focusAreas: [
       "Virtual Machine",
@@ -43,6 +45,7 @@ export const cloudVendorRecords = [
   },
   {
     id: "gcp",
+    category: "cloud",
     name: "Google Cloud Platform",
     focusAreas: [
       "Data Analytics",
@@ -63,6 +66,7 @@ export const cloudVendorRecords = [
   },
   {
     id: "ibm",
+    category: "cloud",
     name: "IBM Cloud",
     focusAreas: ["Security", "Data Analytics", "Networking", "Virtual Machine"],
     workloads: ["Regulated", "Enterprise", "Public Sector"],
@@ -77,6 +81,7 @@ export const cloudVendorRecords = [
   },
   {
     id: "do",
+    category: "cloud",
     name: "DigitalOcean",
     focusAreas: ["Virtual Machine", "Storage", "DevOps", "Networking"],
     workloads: ["Startup", "SMB", "Digital Native"],
@@ -89,11 +94,9 @@ export const cloudVendorRecords = [
     differentiators:
       "Developer-friendly UX with flat-rate support plans for startups.",
   },
-];
-
-const securityVendors = [
   {
     id: "crowdstrike",
+    category: "security",
     name: "CrowdStrike Falcon",
     focusAreas: ["Endpoint", "Threat Intel", "Incident Response"],
     segments: ["Enterprise", "Growth"],
@@ -102,6 +105,7 @@ const securityVendors = [
   },
   {
     id: "wiz",
+    category: "security",
     name: "Wiz",
     focusAreas: ["Cloud Posture", "Vulnerability", "Identity"],
     segments: ["Enterprise", "Digital Native"],
@@ -110,7 +114,7 @@ const securityVendors = [
   },
 ];
 
-export const vendorCollections = {
+export const collectionDefinitions = {
   cloud: {
     label: "Cloud Providers",
     description:
@@ -122,7 +126,6 @@ export const vendorCollections = {
       { key: "pricingModel", label: "Pricing" },
       { key: "certifications", label: "Certifications" },
     ],
-    rows: cloudVendorRecords,
   },
   security: {
     label: "Security Platforms",
@@ -134,7 +137,6 @@ export const vendorCollections = {
       { key: "segments", label: "Segment" },
       { key: "certifications", label: "Certifications" },
     ],
-    rows: securityVendors,
   },
   support: {
     label: "Support & Service Desks",
@@ -145,7 +147,6 @@ export const vendorCollections = {
       { key: "focusAreas", label: "Focus" },
       { key: "segments", label: "Segment" },
     ],
-    rows: [],
   },
   workos: {
     label: "Work OS & Collaboration",
@@ -156,74 +157,104 @@ export const vendorCollections = {
       { key: "focusAreas", label: "Focus" },
       { key: "segments", label: "Segment" },
     ],
-    rows: [],
   },
 };
 
-export function queryCloudVendors({
-  need,
-  workloadSize,
-  budget,
-  weakPoints,
-}) {
-  const normalizedWeakPoints = (weakPoints || "").toLowerCase();
-  const budgetBoost = budget === "High" ? 5 : budget === "Medium" ? 3 : 0;
-
-  const scored = cloudVendorRecords
-    .filter((vendor) => vendor.focusAreas.includes(need))
-    .filter((vendor) => {
-      if (workloadSize === "Regulated") {
-        return vendor.workloads?.includes("Regulated");
-      }
-      if (workloadSize === "Enterprise") {
-        return (
-          vendor.workloads?.includes("Enterprise") ||
-          vendor.workloads?.includes("Growth") ||
-          vendor.workloads?.includes("Public Sector")
-        );
-      }
-      if (workloadSize === "Startup") {
-        return (
-          vendor.workloads?.includes("Startup") ||
-          vendor.workloads?.includes("Digital Native") ||
-          vendor.workloads?.includes("SMB")
-        );
-      }
-      if (workloadSize === "Digital Native") {
-        return (
-          vendor.workloads?.includes("Digital Native") ||
-          vendor.workloads?.includes("Growth")
-        );
-      }
-      if (workloadSize === "Public Sector") {
-        return (
-          vendor.workloads?.includes("Public Sector") ||
-          vendor.certifications?.includes("FedRAMP")
-        );
-      }
-      return vendor.workloads?.includes(workloadSize);
-    })
-    .map((vendor) => {
-      const mitigationMatches = vendor.mitigates?.filter((item) =>
-        normalizedWeakPoints.includes(item)
-      );
-      const workloadFit = vendor.workloads?.includes(workloadSize) ? 25 : 15;
-      const mitigationScore = mitigationMatches && mitigationMatches.length > 0 ? 10 : 0;
-      const certificationBonus =
-        workloadSize === "Regulated" && vendor.certifications?.length
-          ? 8
-          : 0;
-
-      return {
-        ...vendor,
-        matchScore: 55 + workloadFit + mitigationScore + budgetBoost + certificationBonus,
-        highlightedMitigations: mitigationMatches || [],
-      };
-    })
-    .sort((a, b) => b.matchScore - a.matchScore);
-
-  return new Promise((resolve) => {
-    setTimeout(() => resolve(scored), 200);
-  });
+function parseJsonField(value) {
+  if (!value) return [];
+  if (Array.isArray(value)) return value;
+  try {
+    const parsed = JSON.parse(value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
 }
 
+export function deserializeProduct(row) {
+  return {
+    id: row.id,
+    category: row.category,
+    name: row.name,
+    focusAreas: parseJsonField(row.focus_areas),
+    workloads: parseJsonField(row.workloads),
+    mitigates: parseJsonField(row.mitigates),
+    segments: parseJsonField(row.segments),
+    pricingModel: row.pricing_model || "",
+    certifications: parseJsonField(row.certifications),
+    regionalCoverage: row.regional_coverage || "",
+    differentiators: row.differentiators || "",
+    strengths: row.strengths || "",
+  };
+}
+
+export function vendorSupportsWorkload(vendor, workloadSize) {
+  const workloads = vendor.workloads || [];
+
+  if (workloadSize === "Regulated") {
+    return workloads.includes("Regulated");
+  }
+
+  if (workloadSize === "Enterprise") {
+    return (
+      workloads.includes("Enterprise") ||
+      workloads.includes("Growth") ||
+      workloads.includes("Public Sector")
+    );
+  }
+
+  if (workloadSize === "Startup") {
+    return (
+      workloads.includes("Startup") ||
+      workloads.includes("Digital Native") ||
+      workloads.includes("SMB")
+    );
+  }
+
+  if (workloadSize === "Digital Native") {
+    return (
+      workloads.includes("Digital Native") || workloads.includes("Growth")
+    );
+  }
+
+  if (workloadSize === "Public Sector") {
+    return (
+      workloads.includes("Public Sector") ||
+      workloads.includes("Enterprise") ||
+      workloads.includes("Regulated") ||
+      workloads.includes("Government") ||
+      workloads.includes("Public")
+    );
+  }
+
+  return workloads.includes(workloadSize);
+}
+
+export function computeCloudMatchScore(vendor, { need, workloadSize, budget, weakPoints }) {
+  if (!vendor.focusAreas.includes(need)) {
+    return null;
+  }
+
+  if (!vendorSupportsWorkload(vendor, workloadSize)) {
+    return null;
+  }
+
+  const normalizedWeakPoints = (weakPoints || "").toLowerCase();
+  const budgetBoost = budget === "High" ? 5 : budget === "Medium" ? 3 : 0;
+  const workloadFit = vendor.workloads.includes(workloadSize) ? 25 : 15;
+  const mitigationMatches = vendor.mitigates.filter((item) =>
+    normalizedWeakPoints.includes(item)
+  );
+  const mitigationScore = mitigationMatches.length > 0 ? 10 : 0;
+  const certificationBonus =
+    workloadSize === "Regulated" && vendor.certifications.length > 0 ? 8 : 0;
+
+  return {
+    ...vendor,
+    matchScore: Math.min(
+      100,
+      55 + workloadFit + mitigationScore + budgetBoost + certificationBonus
+    ),
+    highlightedMitigations: mitigationMatches,
+  };
+}
